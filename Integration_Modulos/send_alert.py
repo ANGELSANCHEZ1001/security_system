@@ -34,6 +34,6 @@ def enviar_mensaje_sms( ahora):
     except subprocess.CalledProcessError as e:
         print(f"Error al ejecutar firebase deploy: {e}")
 
-    try:
-        os.system("python send_alert.py")
+    #try:
+     #   os.system("python send_alert.py")
         #ejecutar seed.js
