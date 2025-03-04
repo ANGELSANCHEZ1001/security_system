@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Galería desde MongoDB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin: 20px;
+            color: #333;
+        }
+        #menu {
+            background: #333;
+            padding: 10px;
+        }
+        #menu a {
+            color: white;
+            text-decoration: none;
+            margin: 10px;
+        }
+        #image-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 10px;
+        }
+        img {
+            margin: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            width: 200px;
+            height: auto;
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        img:hover {
+            transform: scale(1.1);
+            border-color: #666;
+        }
+        /* ESTILOS DEL MODAL */
+        #image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        #modal-content {
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 10px;
+            transition: transform 0.2s;
+            transform-origin: center center;
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <a href="historico.html">Histórico</a>
+        <a href="fotos.html">Galería</a>
+    </div>
+    <h1>Galería de Imágenes</h1>
+    <input type="text" id="search-key" placeholder="Ingrese clave">
+    <button onclick="fetchImages()">Buscar</button>
+    <div id="image-container"></div>
+
+    <!-- MODAL PARA ZOOM -->
+    <div id="image-modal" onclick="closeModal()">
+        <img id="modal-content" src="" alt="Imagen en zoom">
+    </div>
+
+    <script>
+        let currentZoom = 1;
+        const zoomFactor = 1.2; // Factor de incremento en cada clic
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        async function fetchImages() {
+            let key = document.getElementById("search-key").value || getQueryParam('key');
+            if (!key) {
+                alert('Ingrese una clave para buscar imágenes');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:4321/images/${key}`);
+                if (!response.ok) throw new Error('Error al obtener imágenes');
+
+                const images = await response.json();
+                console.log('📷 Imágenes obtenidas:', images);
+
+                const container = document.getElementById('image-container');
+                container.innerHTML = '';
+
+                if (images.length === 0) {
+                    container.innerHTML = '<p>No se encontraron imágenes</p>';
+                    return;
+                }
+
+                images.forEach(image => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = image.url;
+                    imgElement.alt = image.title || 'Imagen';
+                    // Al hacer clic en la miniatura se abre el modal
+                    imgElement.onclick = () => openModal(image.url);
+                    container.appendChild(imgElement);
+                });
+            } catch (error) {
+                console.error('❌ Error al cargar imágenes:', error);
+            }
+        }
+
+        function openModal(imageUrl) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-content');
+            currentZoom = 1;
+            modalImg.style.transform = 'scale(1)';
+            modalImg.style.transformOrigin = 'center center';
+            modalImg.src = imageUrl;
+            modal.style.display = "flex";
+
+            modalImg.onclick = function(e) {
+                e.stopPropagation();
+                const rect = modalImg.getBoundingClientRect();
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+                const originX = (offsetX / rect.width) * 100;
+                const originY = (offsetY / rect.height) * 100;
+                modalImg.style.transformOrigin = `${originX}% ${originY}%`;
+                currentZoom *= zoomFactor;
+                modalImg.style.transform = `scale(${currentZoom})`;
+            };
+        }
+
+        function closeModal() {
+            document.getElementById('image-modal').style.display = "none";
+        }
+
+        window.onload = fetchImages;
+    </script>
+</body>
+</html>
