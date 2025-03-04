@@ -5,8 +5,9 @@ import time
 import os
 from datetime import datetime
 import subprocess
-def enviar_mensaje_sms( ahora):
-    mensaje=f"prueba a las {ahora} https://modular-2025.web.app/"
+def enviar_mensaje_sms( ahora, newdir):
+    mensaje = f"prueba a las {ahora} http://192.168.100.142:1234/home/{newdir}"
+    #insercion db
     numero_destino="+523340511109"
     account_sid = ""
     auth_token = ""
@@ -35,5 +36,5 @@ def enviar_mensaje_sms( ahora):
         print(f"Error al ejecutar firebase deploy: {e}")
 
     #try:
-     #   os.system("python send_alert.py")
+       # os.system("python send_alert.py")
         #ejecutar seed.js
